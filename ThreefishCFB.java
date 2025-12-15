@@ -42,45 +42,32 @@ public class ThreefishCFB {
         this.feedback = iv.clone();
     }
 
-    public byte[] encrypt(byte[] plaintext) {
-        if (plaintext == null || plaintext.length == 0) {
+    public byte[] process(byte[] data) {
+        if (data == null || data.length == 0) {
             return new byte[0];
         }
 
-        byte[] ciphertext = new byte[plaintext.length];
+        byte[] result = new byte[data.length];
         int feedbackPos = 0;
 
-        for (int i = 0; i < plaintext.length; i++) {
+        for (int i = 0; i < data.length; i++) {
             if (feedbackPos == 0) {
                 feedback = cipher.encryptBlock(feedback);
             }
 
-            ciphertext[i] = (byte) (plaintext[i] ^ feedback[feedbackPos]);
-            feedback[feedbackPos] = ciphertext[i];
+            result[i] = (byte) (data[i] ^ feedback[feedbackPos]);
+            feedback[feedbackPos] = data[i];
             feedbackPos = (feedbackPos + 1) % blockSize;
         }
 
-        return ciphertext;
+        return result;
+    }
+
+    public byte[] encrypt(byte[] plaintext) {
+        return process(plaintext);
     }
 
     public byte[] decrypt(byte[] ciphertext) {
-        if (ciphertext == null || ciphertext.length == 0) {
-            return new byte[0];
-        }
-
-        byte[] plaintext = new byte[ciphertext.length];
-        int feedbackPos = 0;
-
-        for (int i = 0; i < ciphertext.length; i++) {
-            if (feedbackPos == 0) {
-                feedback = cipher.encryptBlock(feedback);
-            }
-
-            plaintext[i] = (byte) (ciphertext[i] ^ feedback[feedbackPos]);
-            feedback[feedbackPos] = ciphertext[i];
-            feedbackPos = (feedbackPos + 1) % blockSize;
-        }
-
-        return plaintext;
+        return process(ciphertext);
     }
 }
