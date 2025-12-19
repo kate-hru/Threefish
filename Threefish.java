@@ -85,26 +85,6 @@ public class Threefish {
         keySet = true;
     }
 
-    // public void setKeyWords(long[] keyWords) {
-    //     if (keyWords.length != size.Nw) {
-    //         throw new IllegalArgumentException(
-    //                 "Ключ должен иметь" + size.Nw + " слов"
-    //         );
-    //     }
-
-    //     for (int i = 0; i < size.Nw; i++) {
-    //         expandedKey[i] = keyWords[i];
-    //     }
-    //     expandedKey[size.Nw] = C240;
-    //     for (int i = 0; i < size.Nw; i++) {
-    //         expandedKey[size.Nw] ^= keyWords[i];
-    //     }
-
-    //     keySet = true;
-
-    // }
-
-
     public void setTweak(byte[] tweak) {
         if (tweak.length != 16) {
             throw new IllegalArgumentException("Tweak-значение должно быть 16 байт");
@@ -414,5 +394,4 @@ public class Threefish {
 
         return bytes;
     }
-
 }
