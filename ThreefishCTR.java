@@ -57,9 +57,9 @@ public class ThreefishCTR {
         return nonce.clone();
     }
 
-    public long getCounter() {
-        return counter;
-    }
+//    public long getCounter() {
+//        return counter;
+//    }
 
     public void resetCounter() {
         this.counter = 0L;
