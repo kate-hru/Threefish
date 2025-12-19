@@ -14,13 +14,6 @@ public class Main {
             return;
         }
 
-        if (args[0].equals("-t")) {
-            if (!testControlSums()) {
-                System.exit(1);
-            }
-            return;
-        }
-
         Config config = parseArgs(args);
         validateConfig(config);
         execute(config);
@@ -212,7 +205,6 @@ public class Main {
                         return FileVisitResult.CONTINUE;
                     }
 
-                    // При дешифровании пропускаем не .enc файлы
                     if (config.decrypt && !name.endsWith(".enc")) {
                         if (config.verbose) {
                             System.out.println("Пропущен (не .enc): " + name);
@@ -326,106 +318,6 @@ public class Main {
         return meta;
     }
 
-    static boolean testControlSums() {
-        System.out.println("Проверка контрольных значений");
-        System.out.println();
-
-        boolean allTestsPassed = true;
-
-        int[] sizes = {256, 512, 1024};
-        String[] sizeNames = {"TF_256", "TF_512", "TF_1024"};
-
-        for (int i = 0; i < sizes.length; i++) {
-            int size = sizes[i];
-            String sizeName = sizeNames[i];
-
-            System.out.println("Проверка " + size + " бит:");
-
-            try {
-                byte[] key = new byte[size / 8];
-                byte[] tweak = new byte[16];
-
-                Threefish cipher = new Threefish(Threefish.Size.valueOf(sizeName));
-                cipher.setKey(key);
-                cipher.setTweak(tweak);
-
-                byte[] plaintext = new byte[size / 8];
-
-                byte[] ciphertext = cipher.encryptBlock(plaintext);
-
-                byte[] decrypted = cipher.decryptBlock(ciphertext);
-
-                boolean encryptionWorks = !Arrays.equals(plaintext, ciphertext);
-                boolean decryptionWorks = Arrays.equals(plaintext, decrypted);
-
-                if (encryptionWorks && decryptionWorks) {
-                    System.out.println("Шифрование/расшифрование работает");
-
-                    byte[] testData = new byte[size / 8];
-                    Arrays.fill(testData, (byte) 0xAA);
-
-                    byte[] testEnc = cipher.encryptBlock(testData);
-                    byte[] testDec = cipher.decryptBlock(testEnc);
-
-                    if (Arrays.equals(testData, testDec)) {
-                        System.out.println("Алгоритм работает корректно");
-                    } else {
-                        System.out.println("Ошибка в алгоритме");
-                        allTestsPassed = false;
-                    }
-
-                } else {
-                    System.out.println("Ошибка: шифрование не работает");
-                    allTestsPassed = false;
-                }
-
-            } catch (Exception e) {
-                System.out.println("Ошибка: " + e.getMessage());
-                allTestsPassed = false;
-            }
-
-            System.out.println();
-        }
-
-        System.out.println("Проверка режимов шифрования:");
-
-        try {
-            Threefish cipher = new Threefish(Threefish.Size.TF_256);
-            byte[] key = new byte[32];
-            Arrays.fill(key, (byte) 0x01);
-            cipher.setKey(key);
-
-            byte[] testData = "Test data".getBytes("UTF-8");
-
-            ThreefishCTR ctr = new ThreefishCTR(cipher);
-            byte[] ctrEnc = ctr.encrypt(testData);
-            ctr.resetCounter();
-            byte[] ctrDec = ctr.decrypt(ctrEnc);
-
-            boolean ctrOk = Arrays.equals(testData, ctrDec);
-            System.out.println("  CTR режим: " + (ctrOk ? "Все супер" : "Ошибка"));
-
-            // CFB режим
-            ThreefishCFB cfb = new ThreefishCFB(cipher);
-            byte[] cfbEnc = cfb.encrypt(testData);
-            cfb.reset();
-            byte[] cfbDec = cfb.decrypt(cfbEnc);
-
-            boolean cfbOk = Arrays.equals(testData, cfbDec);
-            System.out.println("  CFB режим: " + (cfbOk ? "Все супер" : "Ошибка"));
-
-            allTestsPassed = allTestsPassed && ctrOk && cfbOk;
-
-        } catch (Exception e) {
-            System.out.println("Ошибка режимов: " + e.getMessage());
-            allTestsPassed = false;
-        }
-
-        System.out.println("Итог: " + (allTestsPassed ? "Все тесты прошли проверку)" : "Что-то не так("));
-
-        return allTestsPassed;
-    }
-
     static byte[] prepareKey(Config config) throws Exception {
         if (config.key != null) {
             return hexToBytes(config.key);
@@ -530,20 +422,5 @@ public class Main {
         System.out.println("  -v             Подробный вывод");
         System.out.println("  -nomd          Не сохранять метаданные в .enc файлах");
         System.out.println();
-//        System.out.println("ПРИМЕРЫ:");
-//        System.out.println("  # Шифрование файла (ключ сгенерируется):");
-//        System.out.println("  java ThreefishCLI -E secret.txt");
-//        System.out.println();
-//        System.out.println("  # Шифрование с паролем:");
-//        System.out.println("  java ThreefishCLI -E -p \"мойпароль\" file.txt.txt");
-//        System.out.println();
-//        System.out.println("  # Шифрование директории:");
-//        System.out.println("  java ThreefishCLI -E -r ./documents");
-//        System.out.println();
-//        System.out.println("  # Дешифрование (из .enc с метаданными):");
-//        System.out.println("  java ThreefishCLI -D file.txt.txt.enc");
-//        System.out.println();
-//        System.out.println("  # Дешифрование с ключом:");
-//        System.out.println("  java ThreefishCLI -D -k 0011223344... -n AABBCCDD... file.txt.enc");
     }
 }
